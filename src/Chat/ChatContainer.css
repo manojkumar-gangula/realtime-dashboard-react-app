@@ -1,0 +1,8 @@
+.chatContainer {
+  height: 100vh;
+  width: 25%;
+  min-width: 16rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
