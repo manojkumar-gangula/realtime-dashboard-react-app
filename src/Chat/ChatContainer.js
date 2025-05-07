@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import MessageInput from "./MessageInput";
 import Messages from "./Messages";
+import RoomInput from "./RoomInput";
 import "./ChatContainer.css";
 import { io } from "socket.io-client";
 
 function ChatContainer() {
   const newMessageRef = useRef(null);
   const scrollDiv = useRef();
+  const [roomId, setRoomId] = useState(null);
   const [messages, setMessages] = useState([
     { text: "Hi Manoj!", source: "received" },
   ]);
@@ -37,7 +39,7 @@ function ChatContainer() {
     console.log("From newMessageChangeHandler");
     setMessages((prevMessages) => [...prevMessages, messageObject]);
     console.log(messages);
-    socket.current.emit("send_msg", messageObject);
+    socket.current.emit("send_msg", messageObject, roomId);
     console.log("msg sent: " + messageObject.text);
     newMessageRef.current.value = "";
   };
@@ -55,12 +57,28 @@ function ChatContainer() {
     }
   }
 
+  function handleRoomConnection(event) {
+    event.preventDefault();
+    const clickedButton = event.nativeEvent.submitter.value;
+    setRoomId(event.target.elements[0].value);
+    if (clickedButton === "Join") {
+      console.log("Clicked Join");
+      socket.current.emit("join_room", roomId);
+      setRoomId(roomId);
+    } else if (clickedButton === "Leave") {
+      console.log("Clicked Leave");
+      socket.current.emit("leave_room", roomId);
+      setRoomId(null);
+    }
+  }
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   return (
     <div className="chatContainer">
+      <RoomInput handleRoomConnection={handleRoomConnection} />
       <Messages messages={messages} scrollDiv={scrollDiv} />
       <MessageInput
         newMessageChangeHandler={newMessageChangeHandler}

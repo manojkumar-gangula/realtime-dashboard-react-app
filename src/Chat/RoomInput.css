@@ -1,0 +1,15 @@
+.buttonDiv {
+  display: flex;
+  justify-content: space-around;
+  padding: 2%;
+}
+
+.formContainer {
+  padding-top: 1%;
+  width: 95%;
+}
+
+#join-btn,
+#leave-btn {
+  width: 40%;
+}
