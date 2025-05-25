@@ -60,11 +60,12 @@ function ChatContainer() {
   function handleRoomConnection(event) {
     event.preventDefault();
     const clickedButton = event.nativeEvent.submitter.value;
-    setRoomId(event.target.elements[0].value);
+    let tempRoomId = event.target.elements[0].value;
+    setRoomId(tempRoomId);
     if (clickedButton === "Join") {
       console.log("Clicked Join");
-      socket.current.emit("join_room", roomId);
-      setRoomId(roomId);
+      socket.current.emit("join_room", tempRoomId);
+      setRoomId(tempRoomId);
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
       socket.current.emit("leave_room", roomId);
