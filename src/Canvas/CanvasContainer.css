@@ -1,0 +1,28 @@
+#myCanvas {
+  border: 1px solid var(--border-neutral-subtle);
+  z-index: 2;
+}
+
+.lower-canvas {
+  position: initial !important;
+}
+
+.app {
+  font-family: sans-serif;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+  padding: 100px 16px;
+  background-color: #6f7274;
+  min-height: 100vh;
+  height: 100%;
+}
+.stage {
+  background-color: aliceblue;
+}
+
+.icons-container {
+  display: flex;
+}

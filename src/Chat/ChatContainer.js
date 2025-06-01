@@ -5,7 +5,7 @@ import RoomInput from "./RoomInput";
 import "./ChatContainer.css";
 import { io } from "socket.io-client";
 
-function ChatContainer() {
+function ChatContainer({ chatContainer }) {
   const newMessageRef = useRef(null);
   const scrollDiv = useRef();
   const [roomId, setRoomId] = useState(null);
