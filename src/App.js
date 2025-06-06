@@ -10,8 +10,8 @@ import { io } from "socket.io-client";
 function App() {
   return (
     <div className="App">
-      <ChatContainer className={"chatContainer"} />
-      <CanvasContainer className={"canvasContainer"} />
+      <ChatContainer />
+      <CanvasContainer />
     </div>
   );
 }

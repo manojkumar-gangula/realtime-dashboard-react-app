@@ -4,21 +4,20 @@ import { IconButton } from "@mui/material";
 import StopIcon from "@mui/icons-material/Stop";
 import { Circle as CircleIcon } from "@mui/icons-material";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import { Stage, Layer, Rect, Circle, Text } from "react-konva";
+import { Stage, Layer, Rect, Circle } from "react-konva";
+import { Line } from "react-konva";
 
-function CanvasContainer({ canvasContainer }) {
+function CanvasContainer() {
   const canvasRef = useRef(null);
-  const [shapes, setShapes] = useState([{}]);
+  const [shapes, setShapes] = useState([]);
   const iconMapping = {
-    rect: Rect,
+    rectangle: Rect,
     circle: Circle,
     line: Line,
   };
-  let compShapeName = null;
 
   function addShape(e) {
     let iconName = e.currentTarget.id.slice(0, -5);
-    compShapeName = iconMapping.iconName;
     let newShape = {
       id: `${iconName}-${shapes.length + 1}`,
       className: `${iconName}`,
@@ -33,7 +32,7 @@ function CanvasContainer({ canvasContainer }) {
     setShapes([...shapes, newShape]);
   }
   return (
-    <div className={`app ${canvasContainer}`}>
+    <div className="canvasApp canvasContainer">
       <div className="icons-container">
         <IconButton
           onClick={addShape}
@@ -73,17 +72,25 @@ function CanvasContainer({ canvasContainer }) {
         </IconButton>
       </div>
       <div className="stage">
-        <Stage width={500} height={400}>
+        <Stage width={1000} height={400}>
           <Layer>
-            {shapes.map((shape, i) => (
-              <Rect
-                key={shape.id}
-                {...shape}
-                onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
-                onMouseLeave={(e) => e.target.fill("transparent")}
-                draggable
-              />
-            ))}
+            {shapes.length > 0 &&
+              shapes.map((shape, i) => {
+                let iconName = shape.className;
+                console.log("Icon: " + iconName);
+                const CompShapeName = iconMapping[iconName];
+                console.log("CompShapeName : " + CompShapeName);
+                return (
+                  <CompShapeName
+                    key={shape.id}
+                    {...shape}
+                    {...(iconName === "line" && { points: [20, 50, 200, 200] })}
+                    onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
+                    onMouseLeave={(e) => e.target.fill("transparent")}
+                    draggable
+                  />
+                );
+              })}
             {/* <Rect
               x={20}
               y={50}
@@ -97,7 +104,7 @@ function CanvasContainer({ canvasContainer }) {
               onMouseLeave={() => setIsHovered(false)}
               draggable
             /> */}
-            <Circle x={200} y={100} radius={50} fill="green" draggable />
+            {/* <Circle x={200} y={100} radius={50} fill="green" draggable /> */}
           </Layer>
         </Stage>
       </div>
