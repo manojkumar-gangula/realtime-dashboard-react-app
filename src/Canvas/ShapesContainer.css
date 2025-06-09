@@ -1,3 +1,60 @@
 .icons-container {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.icon {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Hidden by default */
+.icons {
+  position: absolute;
+  top: 0;
+  left: 100%; /* Appear to the right */
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: white;
+  padding: 8px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateX(10px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* When hovering over parent or icons */
+.icons-container:hover .icons,
+.icons:hover {
+  opacity: 1;
+  pointer-events: auto; /* Enable interaction */
+  transform: translateX(0); /* Slide in fully */
+}
+
+/* Ensure icons remain visible when hovering over them */
+.icons-container:hover .icons {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.icons:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.my-hover-effect {
+  transition: transform 0.2s ease;
+}
+
+.my-hover-effect:hover {
+  transform: scale(1.15);
 }
