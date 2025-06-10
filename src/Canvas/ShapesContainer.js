@@ -1,72 +1,88 @@
-import { IconButton } from "@mui/material";
-import StopIcon from "@mui/icons-material/Stop";
-import { Circle as CircleIcon } from "@mui/icons-material";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
-import TriangleIcon from "@mui/icons-material/ChangeHistory";
-import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
+import {
+  Square,
+  Circle,
+  Triangle,
+  Minus,
+  Pentagon,
+  Shapes,
+  StickyNote,
+  Brush,
+  Type,
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import "./ShapesContainer.css";
 
 function ShapesContainer({ addShape }) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  // Optional: Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="icons-container">
-      <IconButton
-        size="small"
-        sx={{
-          color: "transparent",
-          stroke: "black",
-          strokeWidth: 1.5,
-        }}
-        id="shapes-icon"
+    <div className="icons-container" ref={containerRef}>
+      <div
+        className="icon"
+        title="Shapes"
+        onClick={() => setOpen((prev) => !prev)}
       >
-        <CategoryRoundedIcon fontSize="medium" />
-      </IconButton>
-      <IconButton
-        onClick={addShape}
-        size="small"
-        sx={{
-          color: "transparent",
-          stroke: "black",
-          strokeWidth: 1.5,
-        }}
-        id="rectangle-icon"
-      >
-        <StopIcon fontSize="small" />
-      </IconButton>
-      <IconButton
-        onClick={addShape}
-        size="small"
-        sx={{
-          color: "transparent",
-          stroke: "black",
-          strokeWidth: 1.5,
-        }}
-        id="line-icon"
-      >
-        <HorizontalRuleIcon fontSize="small" />
-      </IconButton>
-      <IconButton
-        onClick={addShape}
-        size="small"
-        sx={{
-          color: "transparent",
-          stroke: "black",
-          strokeWidth: 1.5,
-        }}
-        id="circle-icon"
-      >
-        <CircleIcon fontSize="small" />
-      </IconButton>
-      <IconButton
-        onClick={addShape}
-        size="small"
-        sx={{
-          color: "transparent",
-          stroke: "black",
-          strokeWidth: 1.5,
-        }}
-        id="triangle-icon"
-      >
-        <TriangleIcon fontSize="small" />
-      </IconButton>
+        <Shapes />
+      </div>
+
+      {open && (
+        <div className="icons">
+          <div
+            className="my-hover-effect icon"
+            onClick={() => addShape("square")}
+          >
+            <Square />
+          </div>
+          <div
+            className="my-hover-effect icon"
+            onClick={() => addShape("circle")}
+          >
+            <Circle />
+          </div>
+          <div
+            className="my-hover-effect icon"
+            onClick={() => addShape("triangle")}
+          >
+            <Triangle />
+          </div>
+          <div
+            className="my-hover-effect icon"
+            onClick={() => addShape("pentagon")}
+          >
+            <Pentagon />
+          </div>
+          <div
+            className="my-hover-effect icon"
+            onClick={() => addShape("line")}
+          >
+            <Minus />
+          </div>
+        </div>
+      )}
+      <div title="StickyNote" className="icon">
+        <StickyNote />
+      </div>
+      <div title="Brush" className="icon">
+        <Brush />
+      </div>
+      <div title="Text" className="icon">
+        <Type />
+      </div>
     </div>
   );
 }
