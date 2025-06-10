@@ -6,13 +6,27 @@ import { Line } from "react-konva";
 import { socket } from "../socket";
 
 function CanvasContainer() {
-  const canvasRef = useRef(null);
   const [shapes, setShapes] = useState([]);
   const iconMapping = {
     rectangle: Rect,
     circle: Circle,
     line: Line,
   };
+  const [dimensions, setDimensions] = useState({
+    width: window.innerWidth * 0.7,
+    height: window.innerHeight,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth * 0.7,
+        height: window.innerHeight,
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   useEffect(() => {
     const handleShapeUpdate = (shape) => {
       console.log("Received shape from server: " + shape);
@@ -45,27 +59,27 @@ function CanvasContainer() {
   }
   return (
     <div className="canvasApp canvasContainer">
-      <ShapesContainer addShape={addShape} />
       <div className="stage">
-        <Stage width={1000} height={500}>
+        <div className="shapes-float">
+          <ShapesContainer addShape={addShape} />
+        </div>
+        <Stage width={dimensions.width} height={dimensions.height}>
           <Layer>
-            {shapes.length > 0 &&
-              shapes.map((shape, i) => {
-                let iconName = shape.className;
-                console.log("Icon: " + iconName);
-                const CompShapeName = iconMapping[iconName];
-                console.log("CompShapeName : " + CompShapeName);
-                return (
-                  <CompShapeName
-                    key={shape.id}
-                    {...shape}
-                    {...(iconName === "line" && { points: [20, 50, 200, 200] })}
-                    onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
-                    onMouseLeave={(e) => e.target.fill("transparent")}
-                    draggable
-                  />
-                );
-              })}
+            {shapes.map((shape) => {
+              const Component = iconMapping[shape.className];
+              return (
+                <Component
+                  key={shape.id}
+                  {...shape}
+                  {...(shape.className === "line" && {
+                    points: [20, 50, 200, 200],
+                  })}
+                  onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
+                  onMouseLeave={(e) => e.target.fill("transparent")}
+                  draggable
+                />
+              );
+            })}
           </Layer>
         </Stage>
       </div>

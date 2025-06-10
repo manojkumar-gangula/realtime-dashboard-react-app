@@ -1,60 +1,62 @@
 .icons-container {
   position: relative;
-  display: inline-block;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .icon {
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
 }
 
 .icon:hover {
   transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #e2e6ea;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Hidden by default */
 .icons {
   position: absolute;
   top: 0;
-  left: 100%; /* Appear to the right */
+  left: 110%;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background-color: white;
-  padding: 8px;
-  border-radius: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  transform: translateX(10px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid #dee2e6;
+  animation: fadeIn 0.3s ease;
 }
 
-/* When hovering over parent or icons */
-.icons-container:hover .icons,
-.icons:hover {
-  opacity: 1;
-  pointer-events: auto; /* Enable interaction */
-  transform: translateX(0); /* Slide in fully */
-}
-
-/* Ensure icons remain visible when hovering over them */
-.icons-container:hover .icons {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.icons:hover {
-  opacity: 1;
-  pointer-events: auto;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .my-hover-effect {
+  background-color: #f1f3f5;
+  padding: 8px;
+  border-radius: 8px;
   transition: transform 0.2s ease;
 }
 
 .my-hover-effect:hover {
   transform: scale(1.15);
+  background-color: #dee2e6;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.12);
 }
