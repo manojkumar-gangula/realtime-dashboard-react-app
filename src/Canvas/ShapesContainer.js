@@ -1,13 +1,15 @@
 import {
   Square,
   Circle,
-  Triangle,
+  Star,
   Minus,
-  Pentagon,
+  Hexagon,
   Shapes,
   StickyNote,
   Brush,
   Type,
+  MoveUpRight,
+  Triangle,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import "./ShapesContainer.css";
@@ -30,6 +32,11 @@ function ShapesContainer({ addShape }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const iconClickHandler = (e) => {
+    console.log("Calling addShape()");
+    addShape(e);
+  };
+
   return (
     <div className="icons-container" ref={containerRef}>
       <div
@@ -43,44 +50,73 @@ function ShapesContainer({ addShape }) {
       {open && (
         <div className="icons">
           <div
+            id="square-icon"
             className="my-hover-effect icon"
-            onClick={() => addShape("square")}
+            onClick={iconClickHandler}
           >
             <Square />
           </div>
           <div
+            id="triangle-icon"
             className="my-hover-effect icon"
-            onClick={() => addShape("circle")}
-          >
-            <Circle />
-          </div>
-          <div
-            className="my-hover-effect icon"
-            onClick={() => addShape("triangle")}
+            onClick={iconClickHandler}
           >
             <Triangle />
           </div>
           <div
+            id="circle-icon"
             className="my-hover-effect icon"
-            onClick={() => addShape("pentagon")}
+            onClick={iconClickHandler}
           >
-            <Pentagon />
+            <Circle />
           </div>
           <div
+            id="star-icon"
             className="my-hover-effect icon"
-            onClick={() => addShape("line")}
+            onClick={iconClickHandler}
+          >
+            <Star />
+          </div>
+          <div
+            id="hexagon-icon"
+            className="my-hover-effect icon"
+            onClick={iconClickHandler}
+          >
+            <Hexagon />
+          </div>
+          <div
+            id="minus-icon"
+            className="my-hover-effect icon"
+            onClick={iconClickHandler}
           >
             <Minus />
           </div>
+          <div
+            id="moveupright-icon"
+            className="my-hover-effect icon"
+            onClick={iconClickHandler}
+          >
+            <MoveUpRight />
+          </div>
         </div>
       )}
-      <div title="StickyNote" className="icon">
+      <div
+        id="sticky-icon"
+        title="StickyNote"
+        className="icon"
+        onClick={iconClickHandler}
+      >
         <StickyNote />
       </div>
       <div title="Brush" className="icon">
         <Brush />
       </div>
-      <div title="Text" className="icon">
+      <div
+        title="Text"
+        id="text-icon"
+        className="icon"
+        onClick={iconClickHandler}
+      >
         <Type />
       </div>
     </div>
