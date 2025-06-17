@@ -12,11 +12,11 @@ import {
   Text,
 } from "react-konva";
 import { Group } from "react-konva";
-import { Line } from "react-konva";
 import { socket } from "../socket";
 
 function CanvasContainer() {
   const [shapes, setShapes] = useState([]);
+  const [dragShape, setDragShape] = useState({});
   const sidesMapping = {
     minus: 2,
     triangle: 3,
@@ -33,6 +33,7 @@ function CanvasContainer() {
     text: Text,
     triangle: RegularPolygon,
   };
+
   const [dimensions, setDimensions] = useState({
     width: window.innerWidth * 0.7,
     height: window.innerHeight,
@@ -48,20 +49,41 @@ function CanvasContainer() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    socket.emit("send_dragshape_data", dragShape);
+  }, [dragShape]);
+
   useEffect(() => {
     const handleShapeUpdate = (shape) => {
       console.log("Received shape from server: " + shape);
       let newReceivedShape = shape;
-      newReceivedShape.id = shape.id + " received";
       setShapes((prevShapes) => [...prevShapes, shape]);
     };
+
+    const handleDragShape = (shape) => {
+      setShapes((prevShapes) =>
+        prevShapes.map((value) => {
+          if (value.id === shape.id) {
+            return {
+              ...value,
+              x: shape.data.x,
+              y: shape.data.y,
+            };
+          }
+          return value;
+        })
+      );
+    };
+
     socket.on("receive_shape", handleShapeUpdate);
+    socket.on("receive_dragshape_data", handleDragShape);
     return () => {
-      socket.off("receive_shape", handleShapeUpdate);
-      socket.disconnect();
+      // socket.off("receive_shape", handleShapeUpdate);
+      // socket.off("receive_dragshape_data", handleDragShape);
+      // socket.disconnect();
     };
   }, []);
-
   function addShape(e) {
     let iconName = e.currentTarget.id.slice(0, -5);
     console.log("Clicked: " + iconName);
@@ -115,7 +137,6 @@ function CanvasContainer() {
               }
               if (shape.className === "sticky") {
                 console.log("it's sticky...");
-
                 return (
                   <Group key={shape.id} draggable>
                     <Rect
@@ -150,6 +171,18 @@ function CanvasContainer() {
                   onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
                   onMouseLeave={(e) => e.target.fill("transparent")}
                   draggable
+                  onDragStart={() => {
+                    console.log("Started Moving");
+                  }}
+                  onDragMove={(e) => {
+                    let key = e.target.id();
+                    console.log("Key in render method: " + key);
+                    let value = { x: e.target.x(), y: e.target.y() };
+                    setDragShape({ id: key, data: value });
+                  }}
+                  onDragEnd={() => {
+                    console.log("Ended Moving");
+                  }}
                 />
               );
             })}

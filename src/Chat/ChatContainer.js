@@ -47,15 +47,22 @@ function ChatContainer() {
     event.preventDefault();
     const clickedButton = event.nativeEvent.submitter.value;
     let tempRoomId = event.target.elements[0].value;
-    setRoomId(tempRoomId);
     if (clickedButton === "Join") {
       connectSocket();
       console.log("Clicked Join");
-      socket.once("connect", () => {
-        console.log("connected to server");
-        socket.emit("join_room", tempRoomId);
-        setRoomId(tempRoomId);
-      });
+      if (roomId == null) {
+        socket.on("connect", () => {
+          console.log("connected to server");
+          socket.emit("join_room", tempRoomId);
+          setRoomId(tempRoomId);
+        });
+      } else {
+        if (roomId == tempRoomId) {
+          alert("You are already in room: " + roomId + ".");
+        } else {
+          alert("Leave " + roomId + ", to join other.");
+        }
+      }
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
       socket.emit("leave_room", roomId);
