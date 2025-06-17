@@ -33,7 +33,6 @@ function ShapesContainer({ addShape }) {
   }, []);
 
   const iconClickHandler = (e) => {
-    console.log("Calling addShape()");
     addShape(e);
   };
 
