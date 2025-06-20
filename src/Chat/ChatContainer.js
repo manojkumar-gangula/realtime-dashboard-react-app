@@ -27,8 +27,10 @@ function ChatContainer() {
 
   const newMessageChangeHandler = (message) => {
     const messageObject = { text: message, source: "sent" };
-    setMessages((prevMessages) => [...prevMessages, messageObject]);
-    socket.emit("send_msg", messageObject, roomId);
+    if (message && message.trim() !== "") {
+      setMessages((prevMessages) => [...prevMessages, messageObject]);
+      socket.emit("send_msg", messageObject, roomId);
+    }
     newMessageRef.current.value = "";
   };
 
@@ -48,20 +50,24 @@ function ChatContainer() {
     const clickedButton = event.nativeEvent.submitter.value;
     let tempRoomId = event.target.elements[0].value;
     if (clickedButton === "Join") {
-      connectSocket();
-      console.log("Clicked Join");
-      if (roomId == null) {
-        socket.on("connect", () => {
-          console.log("connected to server");
-          socket.emit("join_room", tempRoomId);
-          setRoomId(tempRoomId);
-        });
-      } else {
-        if (roomId == tempRoomId) {
-          alert("You are already in room: " + roomId + ".");
+      if (tempRoomId && tempRoomId.trim() !== "") {
+        connectSocket();
+        console.log("Clicked Join");
+        if (roomId == null) {
+          socket.on("connect", () => {
+            console.log("connected to server");
+            socket.emit("join_room", tempRoomId);
+            setRoomId(tempRoomId);
+          });
         } else {
-          alert("Leave " + roomId + ", to join other.");
+          if (roomId === tempRoomId) {
+            alert("You are already in room: " + roomId + ".");
+          } else {
+            alert("Leave " + roomId + ", to join other.");
+          }
         }
+      } else {
+        alert("Room ID cannot be empty!");
       }
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
