@@ -79,7 +79,7 @@ function CanvasContainer() {
     return () => {
       socket.off("receive_shape", handleShapeUpdate);
       socket.off("receive_dragshape_data", handleDragShape);
-      // socket.disconnect();
+      socket.disconnect();
     };
   }, []);
   function addShape(e) {
