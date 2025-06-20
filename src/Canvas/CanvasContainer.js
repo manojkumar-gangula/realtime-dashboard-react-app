@@ -56,8 +56,6 @@ function CanvasContainer() {
 
   useEffect(() => {
     const handleShapeUpdate = (shape) => {
-      console.log("Received shape from server: " + shape);
-      let newReceivedShape = shape;
       setShapes((prevShapes) => [...prevShapes, shape]);
     };
 
@@ -79,9 +77,9 @@ function CanvasContainer() {
     socket.on("receive_shape", handleShapeUpdate);
     socket.on("receive_dragshape_data", handleDragShape);
     return () => {
-      // socket.off("receive_shape", handleShapeUpdate);
-      // socket.off("receive_dragshape_data", handleDragShape);
-      // socket.disconnect();
+      socket.off("receive_shape", handleShapeUpdate);
+      socket.off("receive_dragshape_data", handleDragShape);
+      socket.disconnect();
     };
   }, []);
   function addShape(e) {
