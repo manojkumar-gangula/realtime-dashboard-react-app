@@ -11,12 +11,16 @@ import {
   RegularPolygon,
   Text,
 } from "react-konva";
-import { Group } from "react-konva";
+import { Group, Transformer } from "react-konva";
 import { socket } from "../socket";
 
 function CanvasContainer() {
   const [shapes, setShapes] = useState([]);
   const [dragShape, setDragShape] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
+  const shapeRef = useRef();
+  const trRef = useRef();
+  const stageRef = useRef();
   const sidesMapping = {
     minus: 2,
     triangle: 3,
@@ -51,6 +55,20 @@ function CanvasContainer() {
   }, []);
 
   useEffect(() => {
+    if (!trRef.current || !stageRef.current) return;
+
+    const stage = stageRef.current;
+    const selectedNode = stage.findOne(`#${selectedId}`);
+
+    if (selectedNode) {
+      trRef.current.nodes([selectedNode]);
+      trRef.current.getLayer().batchDraw();
+    } else {
+      trRef.current.nodes([]);
+    }
+  }, [selectedId, shapes]);
+
+  useEffect(() => {
     socket.emit("send_dragshape_data", dragShape);
   }, [dragShape]);
 
@@ -73,12 +91,30 @@ function CanvasContainer() {
         })
       );
     };
+    const handleResize = (updatedShape) => {
+      setShapes((prevShapes) =>
+        prevShapes.map((shape) =>
+          shape.id === updatedShape.id ? { ...shape, ...updatedShape } : shape
+        )
+      );
+    };
+    const handleRotation = (updatedShape) => {
+      setShapes((prevShapes) =>
+        prevShapes.map((shape) =>
+          shape.id === updatedShape.id ? { ...shape, ...updatedShape } : shape
+        )
+      );
+    };
 
     socket.on("receive_shape", handleShapeUpdate);
     socket.on("receive_dragshape_data", handleDragShape);
+    socket.on("receive_shape_resize", handleResize);
+    socket.on("receive_shape_rotate", handleRotation);
     return () => {
       socket.off("receive_shape", handleShapeUpdate);
       socket.off("receive_dragshape_data", handleDragShape);
+      socket.off("receive_shape_resize", handleResize);
+      socket.off("receive_shape_rotate", handleRotation);
       socket.disconnect();
     };
   }, []);
@@ -117,7 +153,16 @@ function CanvasContainer() {
         <div className="shapes-float">
           <ShapesContainer addShape={addShape} />
         </div>
-        <Stage width={dimensions.width} height={dimensions.height}>
+        <Stage
+          ref={stageRef}
+          width={dimensions.width}
+          height={dimensions.height}
+          onMouseDown={(e) => {
+            if (e.target === e.target.getStage()) {
+              setSelectedId(null); // deselect
+            }
+          }}
+        >
           <Layer>
             {shapes.map((shape) => {
               if (shape.className === "text") {
@@ -159,31 +204,77 @@ function CanvasContainer() {
               return (
                 <Component
                   key={shape.id}
+                  id={shape.id} // REQUIRED for Transformer to work
                   {...shape}
-                  {...(shape.className === "line" && {
-                    sides: 2,
-                  })}
-                  {...(shape.className === "triangle" && {
-                    sides: 3,
-                  })}
-                  onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
-                  onMouseLeave={(e) => e.target.fill("transparent")}
+                  {...(shape.className === "line" && { sides: 2 })}
+                  {...(shape.className === "triangle" && { sides: 3 })}
                   draggable
-                  onDragStart={() => {
-                    console.log("Started Moving");
+                  onClick={() => setSelectedId(shape.id)}
+                  onTap={() => setSelectedId(shape.id)} // mobile support
+                  onTransformEnd={(e) => {
+                    const node = e.target;
+                    const updatedShape = {
+                      ...shape,
+                      x: node.x(),
+                      y: node.y(),
+                      width: node.width() * node.scaleX(),
+                      height: node.height() * node.scaleY(),
+                    };
+                    node.scaleX(1);
+                    node.scaleY(1);
+                    setShapes((prev) =>
+                      prev.map((s) => (s.id === shape.id ? updatedShape : s))
+                    );
                   }}
                   onDragMove={(e) => {
-                    let key = e.target.id();
-                    console.log("Key in render method: " + key);
-                    let value = { x: e.target.x(), y: e.target.y() };
-                    setDragShape({ id: key, data: value });
+                    const value = { x: e.target.x(), y: e.target.y() };
+                    setDragShape({ id: shape.id, data: value });
                   }}
-                  onDragEnd={() => {
-                    console.log("Ended Moving");
+                  onMouseEnter={(e) => e.target.fill("rgba(1, 1, 11, 0.2)")}
+                  onMouseLeave={(e) => e.target.fill("transparent")}
+                  onTransform={(e) => {
+                    const node = e.target;
+
+                    // Get updated position and dimensions
+                    const updatedShape = {
+                      id: node.id(),
+                      x: node.x(),
+                      y: node.y(),
+                      width: node.width() * node.scaleX(),
+                      height: node.height() * node.scaleY(),
+                      scaleX: 1,
+                      scaleY: 1,
+                    };
+
+                    // Reset local scale to avoid double-scaling
+                    node.scaleX(1);
+                    node.scaleY(1);
+
+                    // Update local state
+                    setShapes((prev) =>
+                      prev.map((shape) =>
+                        shape.id === updatedShape.id
+                          ? { ...shape, ...updatedShape }
+                          : shape
+                      )
+                    );
+
+                    // 🔁 Send to other clients via socket
+                    socket.emit("shape_resize", updatedShape);
                   }}
                 />
               );
             })}
+            <Transformer
+              ref={trRef}
+              boundBoxFunc={(oldBox, newBox) => {
+                if (newBox.width < 10 || newBox.height < 10) {
+                  return oldBox;
+                }
+                return newBox;
+              }}
+              rotateEnabled={true}
+            />
           </Layer>
         </Stage>
       </div>
