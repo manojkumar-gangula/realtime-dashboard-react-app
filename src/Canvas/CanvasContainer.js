@@ -91,14 +91,7 @@ function CanvasContainer() {
         })
       );
     };
-    const handleResize = (updatedShape) => {
-      setShapes((prevShapes) =>
-        prevShapes.map((shape) =>
-          shape.id === updatedShape.id ? { ...shape, ...updatedShape } : shape
-        )
-      );
-    };
-    const handleRotation = (updatedShape) => {
+    const handleResizeRotate = (updatedShape) => {
       setShapes((prevShapes) =>
         prevShapes.map((shape) =>
           shape.id === updatedShape.id ? { ...shape, ...updatedShape } : shape
@@ -108,13 +101,11 @@ function CanvasContainer() {
 
     socket.on("receive_shape", handleShapeUpdate);
     socket.on("receive_dragshape_data", handleDragShape);
-    socket.on("receive_shape_resize", handleResize);
-    socket.on("receive_shape_rotate", handleRotation);
+    socket.on("receive_shape_resize_rotate", handleResizeRotate);
     return () => {
       socket.off("receive_shape", handleShapeUpdate);
       socket.off("receive_dragshape_data", handleDragShape);
-      socket.off("receive_shape_resize", handleResize);
-      socket.off("receive_shape_rotate", handleRotation);
+      socket.off("receive_shape_resize_rotate", handleResizeRotate);
       socket.disconnect();
     };
   }, []);
@@ -235,22 +226,22 @@ function CanvasContainer() {
                   onTransform={(e) => {
                     const node = e.target;
 
-                    // Get updated position and dimensions
                     const updatedShape = {
                       id: node.id(),
                       x: node.x(),
                       y: node.y(),
                       width: node.width() * node.scaleX(),
                       height: node.height() * node.scaleY(),
+                      rotation: node.rotation(),
                       scaleX: 1,
                       scaleY: 1,
                     };
 
-                    // Reset local scale to avoid double-scaling
+                    // Reset local scale to avoid compounding
                     node.scaleX(1);
                     node.scaleY(1);
 
-                    // Update local state
+                    // 🔁 Update local state
                     setShapes((prev) =>
                       prev.map((shape) =>
                         shape.id === updatedShape.id
@@ -259,8 +250,8 @@ function CanvasContainer() {
                       )
                     );
 
-                    // 🔁 Send to other clients via socket
-                    socket.emit("shape_resize", updatedShape);
+                    // 🔁 Share over socket
+                    socket.emit("shape_resize_rotate", updatedShape);
                   }}
                 />
               );
