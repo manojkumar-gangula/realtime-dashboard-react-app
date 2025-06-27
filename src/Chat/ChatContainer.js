@@ -7,6 +7,7 @@ import { socket, connectSocket } from "../socket";
 
 function ChatContainer() {
   const newMessageRef = useRef(null);
+  const roomIdRef = useRef(null);
   const scrollDiv = useRef();
   const [roomId, setRoomId] = useState(null);
   const [messages, setMessages] = useState([
@@ -72,6 +73,7 @@ function ChatContainer() {
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
       socket.emit("leave_room", roomId);
+      roomIdRef.current.value = "";
       setRoomId(null);
     }
   }
@@ -82,7 +84,10 @@ function ChatContainer() {
 
   return (
     <div className="chatContainer">
-      <RoomInput handleRoomConnection={handleRoomConnection} />
+      <RoomInput
+        handleRoomConnection={handleRoomConnection}
+        inputRef={roomIdRef}
+      />
       <Messages messages={messages} scrollDiv={scrollDiv} />
       <MessageInput
         newMessageChangeHandler={newMessageChangeHandler}
