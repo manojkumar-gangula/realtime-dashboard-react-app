@@ -1,30 +1,77 @@
-#myCanvas {
-  border: 1px solid var(--border-neutral-subtle);
-  z-index: 2;
-}
-
-.lower-canvas {
-  position: initial !important;
-}
-
-.canvasApp {
-  font-family: sans-serif;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-direction: column;
-  padding: 100px 16px;
-  background-color: #6f7274;
+/* .canvasContainer {
+  position: relative;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
   min-height: 100vh;
-  height: 100%;
-}
-.stage {
-  background-color: aliceblue;
-  width: 100%;
-  height: 90%;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
 }
 
-.icons-container {
+.stage {
+  background-color: #ffffff;
+  border: 2px solid #ced4da;
+  border-radius: 16px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  width: 70vw;
+  height: 95vh;
+  position: relative;
+  z-index: 1;
+}
+
+.shapes-float {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  z-index: 10;
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+} */
+
+.canvasContainer {
+  flex: 1;
+  /* width: 70%; */
+  height: 100vh;
+  position: relative;
   display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background-color: #6f7274;
+  overflow: hidden;
+}
+
+.stage {
+  flex: 1;
+  /* width: 100%; */
+  height: 100%;
+  background-color: aliceblue;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+}
+
+.stage .konvajs-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.shapes-float {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 10px;
+  border-radius: 8px;
+}
+
+Text {
+  text-align: center;
 }

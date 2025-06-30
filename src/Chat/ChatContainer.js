@@ -7,6 +7,7 @@ import { socket, connectSocket } from "../socket";
 
 function ChatContainer() {
   const newMessageRef = useRef(null);
+  const roomIdRef = useRef(null);
   const scrollDiv = useRef();
   const [roomId, setRoomId] = useState(null);
   const [messages, setMessages] = useState([
@@ -27,8 +28,10 @@ function ChatContainer() {
 
   const newMessageChangeHandler = (message) => {
     const messageObject = { text: message, source: "sent" };
-    setMessages((prevMessages) => [...prevMessages, messageObject]);
-    socket.emit("send_msg", messageObject, roomId);
+    if (message && message.trim() !== "") {
+      setMessages((prevMessages) => [...prevMessages, messageObject]);
+      socket.emit("send_msg", messageObject, roomId);
+    }
     newMessageRef.current.value = "";
   };
 
@@ -47,18 +50,30 @@ function ChatContainer() {
     event.preventDefault();
     const clickedButton = event.nativeEvent.submitter.value;
     let tempRoomId = event.target.elements[0].value;
-    setRoomId(tempRoomId);
     if (clickedButton === "Join") {
-      connectSocket();
-      console.log("Clicked Join");
-      socket.once("connect", () => {
-        console.log("connected to server");
-        socket.emit("join_room", tempRoomId);
-        setRoomId(tempRoomId);
-      });
+      if (tempRoomId && tempRoomId.trim() !== "") {
+        connectSocket();
+        console.log("Clicked Join");
+        if (roomId == null) {
+          socket.on("connect", () => {
+            console.log("connected to server");
+            socket.emit("join_room", tempRoomId);
+            setRoomId(tempRoomId);
+          });
+        } else {
+          if (roomId === tempRoomId) {
+            alert("You are already in room: " + roomId + ".");
+          } else {
+            alert("Leave " + roomId + ", to join other.");
+          }
+        }
+      } else {
+        alert("Room ID cannot be empty!");
+      }
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
       socket.emit("leave_room", roomId);
+      roomIdRef.current.value = "";
       setRoomId(null);
     }
   }
@@ -69,7 +84,10 @@ function ChatContainer() {
 
   return (
     <div className="chatContainer">
-      <RoomInput handleRoomConnection={handleRoomConnection} />
+      <RoomInput
+        handleRoomConnection={handleRoomConnection}
+        inputRef={roomIdRef}
+      />
       <Messages messages={messages} scrollDiv={scrollDiv} />
       <MessageInput
         newMessageChangeHandler={newMessageChangeHandler}
