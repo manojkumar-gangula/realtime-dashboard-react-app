@@ -14,10 +14,25 @@ import {
 import { Group, Transformer } from "react-konva";
 import { socket } from "../socket";
 
+const measureHeight = (text, width, fontSize = 24) => {
+  const dummy = new window.Konva.Text({
+    text,
+    width,
+    fontSize,
+    wrap: "word",
+  });
+  return dummy.height();
+};
+
 function CanvasContainer() {
   const [shapes, setShapes] = useState([]);
   const [dragShape, setDragShape] = useState({});
   const [selectedId, setSelectedId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingText, setEditingText] = useState("");
+  const [editingPos, setEditingPos] = useState({ x: 0, y: 0 });
+  const [editingShapeId, setEditingShapeId] = useState(null);
+
   const shapeRef = useRef();
   const trRef = useRef();
   const stageRef = useRef();
@@ -98,6 +113,16 @@ function CanvasContainer() {
         )
       );
     };
+    socket.on("receive_text_update", ({ id, text }) => {
+      setShapes((prev) => prev.map((s) => (s.id === id ? { ...s, text } : s)));
+    });
+    socket.on("shape_text_update", (updated) => {
+      setShapes((prev) =>
+        prev.map((s) =>
+          s.id === updated.id ? { ...s, text: updated.text } : s
+        )
+      );
+    });
 
     socket.on("receive_shape", handleShapeUpdate);
     socket.on("receive_dragshape_data", handleDragShape);
@@ -106,7 +131,9 @@ function CanvasContainer() {
       socket.off("receive_shape", handleShapeUpdate);
       socket.off("receive_dragshape_data", handleDragShape);
       socket.off("receive_shape_resize_rotate", handleResizeRotate);
-      socket.disconnect();
+      socket.off("receive_text_update");
+      socket.off("shape_text_update");
+      // socket.disconnect();
     };
   }, []);
   function addShape(e) {
@@ -138,6 +165,8 @@ function CanvasContainer() {
     setShapes([...shapes, newShape]);
     socket.emit("send_shape", newShape);
   }
+  const currentEditingShape = shapes.find((s) => s.id === editingShapeId);
+
   return (
     <div className="canvasApp canvasContainer">
       <div className="stage">
@@ -160,19 +189,71 @@ function CanvasContainer() {
                 return (
                   <Text
                     key={shape.id}
-                    text="Type here.."
-                    x={100}
-                    y={100}
+                    id={shape.id}
+                    text={shape.text || "Click to edit"}
+                    x={shape.x}
+                    y={shape.y}
+                    width={shape.width || 300}
+                    height={shape.height || 50}
+                    wrap="word"
                     fontSize={24}
                     fill="black"
                     draggable
+                    onClick={() => setSelectedId(shape.id)}
+                    onDblClick={(e) => {
+                      const absPos = e.target.getAbsolutePosition();
+                      setEditingText(shape.text || "");
+                      setEditingPos({ x: absPos.x, y: absPos.y });
+                      setEditingShapeId(shape.id);
+                      setIsEditing(true);
+                    }}
+                    onDragMove={(e) => {
+                      const value = { x: e.target.x(), y: e.target.y() };
+                      setDragShape({ id: shape.id, data: value });
+                    }}
+                    rotation={shape.rotation || 0}
+                    onTransform={(e) => {
+                      const node = e.target;
+                      const newWidth = Math.max(
+                        50,
+                        node.width() * node.scaleX()
+                      );
+                      const currentShape = shapes.find(
+                        (s) => s.id === node.id()
+                      );
+                      if (!currentShape) return;
+
+                      const newHeight = measureHeight(
+                        currentShape.text || "",
+                        newWidth
+                      );
+
+                      node.scaleX(1);
+                      node.scaleY(1);
+
+                      const updatedShape = {
+                        ...currentShape,
+                        x: node.x(),
+                        y: node.y(),
+                        width: newWidth,
+                        height: newHeight,
+                      };
+
+                      setShapes((prev) =>
+                        prev.map((s) =>
+                          s.id === updatedShape.id ? updatedShape : s
+                        )
+                      );
+
+                      socket.emit("shape_resize_rotate", updatedShape);
+                    }}
                   />
                 );
               }
               if (shape.className === "sticky") {
                 console.log("it's sticky...");
                 return (
-                  <Group key={shape.id} draggable>
+                  <Group key={shape.id} id={shape.id} draggable>
                     <Rect
                       width={150}
                       height={100}
@@ -181,12 +262,24 @@ function CanvasContainer() {
                       cornerRadius={8}
                     />
                     <Text
-                      text="Your note here"
-                      fontSize={16}
-                      padding={10}
-                      width={150}
-                      height={100}
+                      key={shape.id}
+                      id={shape.id}
+                      text={shape.text || "Click to edit"}
+                      x={shape.x}
+                      y={shape.y}
+                      fontSize={24}
                       fill="black"
+                      onDragMove={(e) => {
+                        const value = { x: e.target.x(), y: e.target.y() };
+                        setDragShape({ id: shape.id, data: value });
+                      }}
+                      onDblClick={(e) => {
+                        const absPos = e.target.getAbsolutePosition();
+                        setEditingText(shape.text || "");
+                        setEditingPos({ x: absPos.x, y: absPos.y });
+                        setEditingShapeId(shape.id);
+                        setIsEditing(true);
+                      }}
                     />
                   </Group>
                 );
@@ -259,15 +352,55 @@ function CanvasContainer() {
             <Transformer
               ref={trRef}
               boundBoxFunc={(oldBox, newBox) => {
-                if (newBox.width < 10 || newBox.height < 10) {
+                if (newBox.width < 30 || newBox.height < 30) {
                   return oldBox;
                 }
                 return newBox;
               }}
-              rotateEnabled={true}
             />
           </Layer>
         </Stage>
+        {isEditing && currentEditingShape && (
+          <textarea
+            value={editingText}
+            onChange={(e) => {
+              const newText = e.target.value;
+              const newHeight = measureHeight(
+                newText,
+                currentEditingShape.width || 200
+              );
+              const updatedShape = {
+                ...currentEditingShape,
+                text: newText,
+                height: newHeight,
+              };
+
+              setEditingText(newText);
+              setShapes((prev) =>
+                prev.map((s) => (s.id === updatedShape.id ? updatedShape : s))
+              );
+
+              socket.emit("shape_text_update", updatedShape);
+            }}
+            onBlur={() => {
+              setIsEditing(false);
+              setEditingShapeId(null);
+            }}
+            style={{
+              position: "absolute",
+              top: editingPos.y,
+              left: editingPos.x,
+              width: currentEditingShape?.width || "200px",
+              fontSize: "24px",
+              padding: "4px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              zIndex: 999,
+              resize: "none",
+            }}
+            autoFocus
+          />
+        )}
       </div>
     </div>
   );
