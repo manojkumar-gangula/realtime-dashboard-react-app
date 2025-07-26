@@ -3,52 +3,41 @@ import MessageInput from "./MessageInput";
 import Messages from "./Messages";
 import RoomInput from "./RoomInput";
 import "./ChatContainer.css";
-import { io } from "socket.io-client";
+import { socket, connectSocket } from "../socket";
 
 function ChatContainer() {
   const newMessageRef = useRef(null);
+  const roomIdRef = useRef(null);
   const scrollDiv = useRef();
   const [roomId, setRoomId] = useState(null);
   const [messages, setMessages] = useState([
     { text: "Hi Manoj!", source: "received" },
   ]);
 
-  const socket = useRef("null");
   useEffect(() => {
-    socket.current = io.connect("http://localhost:8000", {
-      cors: {
-        origin: "http://localhost:8000",
-        methods: ["GET", "POST"],
-      },
-    });
-
     const handleReceiveMessage = (msg) => {
       console.log("Message received from Server: " + msg.text);
       displayOnScreen(msg.text);
     };
-    socket.current.on("receive_msg", handleReceiveMessage);
+    socket.on("receive_msg", handleReceiveMessage);
 
     return () => {
-      socket.current.off("receive_msg", handleReceiveMessage);
-      socket.current.disconnect();
+      socket.off("receive_msg", handleReceiveMessage); // Cleanup
     };
   }, []);
 
   const newMessageChangeHandler = (message) => {
     const messageObject = { text: message, source: "sent" };
-    console.log("From newMessageChangeHandler");
-    setMessages((prevMessages) => [...prevMessages, messageObject]);
-    console.log(messages);
-    socket.current.emit("send_msg", messageObject, roomId);
-    console.log("msg sent: " + messageObject.text);
+    if (message && message.trim() !== "") {
+      setMessages((prevMessages) => [...prevMessages, messageObject]);
+      socket.emit("send_msg", messageObject, roomId);
+    }
     newMessageRef.current.value = "";
   };
 
   function displayOnScreen(message) {
-    console.log("From displayOnScreen: ");
     let message2 = { text: message, source: "received" };
     setMessages((prevMessages) => [...prevMessages, message2]);
-    console.log(messages);
   }
 
   function scrollToBottom() {
@@ -61,14 +50,30 @@ function ChatContainer() {
     event.preventDefault();
     const clickedButton = event.nativeEvent.submitter.value;
     let tempRoomId = event.target.elements[0].value;
-    setRoomId(tempRoomId);
     if (clickedButton === "Join") {
-      console.log("Clicked Join");
-      socket.current.emit("join_room", tempRoomId);
-      setRoomId(tempRoomId);
+      if (tempRoomId && tempRoomId.trim() !== "") {
+        connectSocket();
+        console.log("Clicked Join");
+        if (roomId == null) {
+          socket.on("connect", () => {
+            console.log("connected to server");
+            socket.emit("join_room", tempRoomId);
+            setRoomId(tempRoomId);
+          });
+        } else {
+          if (roomId === tempRoomId) {
+            alert("You are already in room: " + roomId + ".");
+          } else {
+            alert("Leave " + roomId + ", to join other.");
+          }
+        }
+      } else {
+        alert("Room ID cannot be empty!");
+      }
     } else if (clickedButton === "Leave") {
       console.log("Clicked Leave");
-      socket.current.emit("leave_room", roomId);
+      socket.emit("leave_room", roomId);
+      roomIdRef.current.value = "";
       setRoomId(null);
     }
   }
@@ -79,7 +84,10 @@ function ChatContainer() {
 
   return (
     <div className="chatContainer">
-      <RoomInput handleRoomConnection={handleRoomConnection} />
+      <RoomInput
+        handleRoomConnection={handleRoomConnection}
+        inputRef={roomIdRef}
+      />
       <Messages messages={messages} scrollDiv={scrollDiv} />
       <MessageInput
         newMessageChangeHandler={newMessageChangeHandler}

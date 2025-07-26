@@ -8,7 +8,7 @@
   margin: auto;
   flex-direction: column;
   overflow-y: auto;
-  padding: 0.2rem;
+  padding: 0.1rem;
   border-radius: 1em;
   scrollbar-color: rgb(93, 92, 92);
 }
